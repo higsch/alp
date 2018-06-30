@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 import sys
 
@@ -15,13 +16,16 @@ def logs(filename):
         #    yield line
     else:
         print("No such file '{}'".format(filename), file = sys.stderr)
-        
+
+def splitLogByFormatString(log, formatstring):
+    log_split = re.findall(r'\[.*?\]|\".*?\"|\S+', log)
+    formatstring_split = re.findall(r'\S+', formatstring)
+    return(dict(zip(formatstring_split, log_split)))
+
 def logMap(filename, formatstring):
+    map = []
     for log in logs(filename):
-        print(log)
+        map.append(splitLogByFormatString(log, formatstring))
+    return(map)
 
-
-
-
-
-logMap(filename, formatstring = fs_uberspace)        
+logMap(filename, formatstring = fs_uberspace)      
