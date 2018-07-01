@@ -13,8 +13,6 @@ def _logs(filename):
         with file.open(mode = 'r') as f:
             for line in f.readlines():
                 yield line
-        #for line in file_content:
-        #    yield line
     else:
         print("No such file '{}'".format(filename), file = sys.stderr)
 
