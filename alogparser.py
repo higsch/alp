@@ -1,12 +1,13 @@
 import re
 from pathlib import Path
 import sys
+import json
 
 fs_uberspace = "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
-filename = "./log/access_log"
+std_filename = "./log/access_log"
 
 # read a single line of log file
-def logs(filename):
+def _logs(filename):
     file = Path(filename).resolve()
     if (file.is_file()):
         with file.open(mode = 'r') as f:
@@ -17,15 +18,18 @@ def logs(filename):
     else:
         print("No such file '{}'".format(filename), file = sys.stderr)
 
-def splitLogByFormatString(log, formatstring):
+# split log in dictionary
+def _splitLogByFormatString(log, formatstring):
     log_split = re.findall(r'\[.*?\]|\".*?\"|\S+', log)
     formatstring_split = re.findall(r'\S+', formatstring)
     return(dict(zip(formatstring_split, log_split)))
 
-def logMap(filename, formatstring):
+# construct a map of split log items
+def logMap(filename = std_filename, formatstring = fs_uberspace):
     map = []
-    for log in logs(filename):
-        map.append(splitLogByFormatString(log, formatstring))
+    for log in _logs(filename):
+        map.append(_splitLogByFormatString(log, formatstring))
     return(map)
 
-logMap(filename, formatstring = fs_uberspace)      
+if __name__ == "__main__":
+    print(json.dumps(logMap(), indent = 4))
