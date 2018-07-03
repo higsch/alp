@@ -25,14 +25,14 @@ vars = {
     "%\{[^\}]+?\}i": "VARNAME"}
     
 vars_regex = {
-    "%h": "\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b",
-    "%l": "\S+",
-    "%u": "",
-    "%t": "",
-    "%r": "",
-    "%>s": "",
-    "%b": "",
-    "%\{[^\}]+?\}i": ""}
+    "%h": r"\S+",
+    "%l": r"\S+",
+    "%u": r"\S+",
+    "%t": r"\S+|\[[\s\S]+\]",
+    "%r": r"[\s\S]+",
+    "%>s": r"\S+",
+    "%b": r"\S+",
+    "%\{[^\}]+?\}i": r"[\s\S]+"}
 
 # This one would work:
 # (?P<remote_hostname>[\S]+) (?P<remote_logname>[\S]+) (?P<remote_user>[\S]+) (?P<time>[\s\S]+) \"(?P<first_line_of_request>[\s\S]+)\" (?P<final_status>[\S]+) (?P<response_size_bytes>[\S]+) \"(?P<Referer>[\S]+)\" \"(?P<Useragent>[\s\S]+)\"
@@ -46,12 +46,6 @@ def _logs(filename):
                 yield line
     else:
         print("No such file '{}'".format(filename), file = sys.stderr)
-
-# split log in dictionary
-def _splitLogByFormatString(log, formatstring):
-    log_split = re.findall(r'\[.*?\]|\".*?\"|\S+', log)
-    formatstring_split = re.findall(r'\S+', formatstring)
-    return(dict(zip(formatstring_split, log_split)))
     
 def _replaceVar(s):
     res = "no_var"
@@ -64,13 +58,22 @@ def _replaceVar(s):
         res = res.replace("VARNAME", varname)
     return(res)
 
-def _insertComponentRegex():
-       # TODO: translate different components to their regex
+# TODO: Check if trailing \" are present, then also sapeces should be allowed
+def _insertComponentRegex(component):
+    for key in vars_regex:
+        if (re.match(key, component) is not None):
+            return(vars_regex[key])
+    return(r"[\s\S]+")
     
+# split log in dictionary
+def _splitLogByFormatString(log, fs_regex):
+    log_fs_search = re.search(fs_regex, log)
+    if (log_fs_search is not None):
+        return(log_fs_search.groupdict())
+
 def parseFormatString(fs):
     # get positions of all percent signs
     component_regex = "^%[\w>]|%[\w>{}-]+"
-    any_string_regex = "[\s\S]+"
     percent_positions = []
     for match in re.finditer(component_regex, fs):
         percent_positions.append(match.span())
@@ -86,15 +89,16 @@ def parseFormatString(fs):
     if (previous_pos < len(fs)-1):
         fs_regex_components.append(fs[previous_pos-len(fs):])
     fs_regex = "".join(fs_regex_components)
-    print(fs_regex)
     return(fs_regex)
 
 # construct a map of split log items
-def logMap(filename = std_filename, formatstring = fs_uberspace):
+def logMap(filename = std_filename, fs = fs_uberspace):
+    fs_regex = parseFormatString(fs)
     map = []
     for log in _logs(filename):
-        map.append(_splitLogByFormatString(log, formatstring))
+        map.append(_splitLogByFormatString(log, fs_regex))
     return(map)
 
 if __name__ == "__main__":
     print(json.dumps(logMap(), indent = 4))
+    
