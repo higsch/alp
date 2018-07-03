@@ -73,7 +73,7 @@ def _splitLogByFormatString(log, fs_regex):
 
 def parseFormatString(fs):
     # get positions of all percent signs
-    component_regex = "^%[\w>]|%[\w>{}-]+"
+    component_regex = "%>?{[\w-]+}\w?|%>?\w?"
     percent_positions = []
     for match in re.finditer(component_regex, fs):
         percent_positions.append(match.span())
