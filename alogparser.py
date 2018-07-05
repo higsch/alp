@@ -8,8 +8,8 @@
 #
 import re
 from pathlib import Path
+from datetime import datetime
 import sys
-import json
 
 fs = fs_uberspace = r"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
 std_filename = "./log/access_log"
@@ -58,7 +58,7 @@ def _replaceVar(s):
         res = res.replace("VARNAME", varname)
     return(res)
 
-# TODO: Check if trailing \" are present, then also sapeces should be allowed
+# TODO: Check if trailing \" are present, then also spaces should be allowed
 def _insertComponentRegex(component):
     for key in vars_regex:
         if (re.match(key, component) is not None):
@@ -69,7 +69,10 @@ def _insertComponentRegex(component):
 def _splitLogByFormatString(log, fs_regex):
     log_fs_search = re.search(fs_regex, log)
     if (log_fs_search is not None):
-        return(log_fs_search.groupdict())
+        res = log_fs_search.groupdict()
+        if ("time" in res):
+            res["time"] = _convertTimeStamp(res["time"])
+        return(res)
 
 def parseFormatString(fs):
     # get positions of all percent signs
@@ -98,7 +101,11 @@ def logMap(filename = std_filename, fs = fs_uberspace):
     for log in _logs(filename):
         map.append(_splitLogByFormatString(log, fs_regex))
     return(map)
+    
+def _convertTimeStamp(ts):
+    d = datetime.strptime(ts, "[%d/%b/%Y:%H:%M:%S %z]")
+    return(d)
 
 if __name__ == "__main__":
-    print(json.dumps(logMap(), indent = 4))
+    print(logMap())
     
