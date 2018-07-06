@@ -19,7 +19,7 @@ vars = {
     "%l": "remote_logname",
     "%u": "remote_user",
     "%t": "time",
-    "%r": "first_line_of_request",
+    "%r": "first_line_of_http_request",
     "%>s": "final_status",
     "%b": "response_size_bytes",
     "%\{[^\}]+?\}i": "VARNAME"}
@@ -72,6 +72,8 @@ def _splitLogByFormatString(log, fs_regex):
         res = log_fs_search.groupdict()
         if ("time" in res):
             res["time"] = _convertTimeStamp(res["time"])
+        if ("first_line_of_http_request" in res):
+            res["first_line_of_http_request"] = _parseHttpRequest(res["first_line_of_http_request"])
         return(res)
 
 def parseFormatString(fs):
@@ -105,6 +107,11 @@ def logMap(filename = std_filename, fs = fs_uberspace):
 def _convertTimeStamp(ts):
     d = datetime.strptime(ts, "[%d/%b/%Y:%H:%M:%S %z]")
     return(d)
+    
+def _parseHttpRequest(httpr):
+    httpr_match = re.match("(?P<http_method>\w+) (?P<http_url>.+) (?P<http_version>.+)", httpr)
+    if (httpr_match is not None):
+        return httpr_match.groupdict();
 
 if __name__ == "__main__":
     print(logMap())
