@@ -13,7 +13,7 @@ import sys
 import re
 import user_agents
 
-fs = fs_uberspace = r"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
+fs_uberspace = r"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
 std_filename = "./log/access_log"
 
 vars = {
@@ -103,10 +103,8 @@ def parseFormatString(fs):
 # construct a map of split log items
 def logMap(filename = std_filename, fs = fs_uberspace):
     fs_regex = parseFormatString(fs)
-    map = []
     for log in _logs(filename):
-        map.append(_splitLogByFormatString(log, fs_regex))
-    return(map)
+        yield _splitLogByFormatString(log, fs_regex)
     
 def _convertTimeStamp(ts):
     d = datetime.strptime(ts, "[%d/%b/%Y:%H:%M:%S %z]")
