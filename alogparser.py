@@ -56,7 +56,7 @@ def _replaceVar(s):
             res = vars[key]
     if ("VARNAME" in res):
         varname = re.search(r"(?<={)[\w-]+(?=})", s).group(0)
-        varname = re.sub("-","", varname)
+        varname = re.sub("-", "_", varname)
         res = res.replace("VARNAME", varname.lower())
     return(res)
 
@@ -76,8 +76,8 @@ def _splitLogByFormatString(log, fs_regex):
             res["time"] = _convertTimeStamp(res["time"])
         if ("first_line_of_http_request" in res):
             res["first_line_of_http_request"] = _parseHttpRequest(res["first_line_of_http_request"])
-        if ("useragent" in res):
-            res["useragent"] = _parseUserAgent(res["useragent"])
+        if ("user_agent" in res):
+            res["user_agent"] = _parseUserAgent(res["user_agent"])
         return(res)
 
 def parseFormatString(fs):
