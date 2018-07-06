@@ -6,10 +6,12 @@
 # -> identify fields in log
 # -> build kv dictionary
 #
-import re
 from pathlib import Path
 from datetime import datetime
 import sys
+
+import re
+import user_agents
 
 fs = fs_uberspace = r"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
 std_filename = "./log/access_log"
@@ -55,7 +57,7 @@ def _replaceVar(s):
     if ("VARNAME" in res):
         varname = re.search(r"(?<={)[\w-]+(?=})", s).group(0)
         varname = re.sub("-","", varname)
-        res = res.replace("VARNAME", varname)
+        res = res.replace("VARNAME", varname.lower())
     return(res)
 
 # TODO: Check if trailing \" are present, then also spaces should be allowed
@@ -74,6 +76,8 @@ def _splitLogByFormatString(log, fs_regex):
             res["time"] = _convertTimeStamp(res["time"])
         if ("first_line_of_http_request" in res):
             res["first_line_of_http_request"] = _parseHttpRequest(res["first_line_of_http_request"])
+        if ("useragent" in res):
+            res["useragent"] = _parseUserAgent(res["useragent"])
         return(res)
 
 def parseFormatString(fs):
@@ -112,6 +116,9 @@ def _parseHttpRequest(httpr):
     httpr_match = re.match("(?P<http_method>\w+) (?P<http_url>.+) (?P<http_version>.+)", httpr)
     if (httpr_match is not None):
         return httpr_match.groupdict();
+        
+def _parseUserAgent(ua):
+    return(user_agents.parse(ua))
 
 if __name__ == "__main__":
     print(logMap())
